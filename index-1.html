@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>科琪綠工業有限公司管理課</title>
+<style>
+body {font-family:"標楷體", Arial, sans-serif; margin:20px;}
+h1 {margin-bottom:10px;}
+.tab-buttons button {margin-right:5px; margin-bottom:10px;}
+.tab {display:none;}
+.tab-active {display:block;}
+table {border-collapse:collapse; width:100%; margin-bottom:10px;}
+table, th, td {border:1px solid #000;}
+th, td {padding:5px; text-align:left;}
+input, select {width:100%; box-sizing:border-box;}
+button {margin:3px;}
+</style>
+
+<!-- SheetJS / jsPDF / autoTable -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<!-- Google API -->
+<script src="https://apis.google.com/js/api.js"></script>
+</head>
+<body>
+
+<h1>科琪綠工業有限公司管理課</h1>
+<div class="tab-buttons">
+<button onclick="showTab('employee')">員工資料管理</button>
+<button onclick="showTab('license')">證照管理</button>
+<button onclick="showTab('expense')">零用金申請</button>
+<button onclick="showTab('mail')">郵寄資料管理</button>
+</div>
+
+<!-- 員工資料 -->
+<div id="employee" class="tab">
+<h2>員工資料管理</h2>
+<input type="text" id="employeeSearch" placeholder="搜尋員工姓名..." oninput="searchTable('employeeTable','employeeSearch')">
+<table id="employeeTable">
+<thead>
+<tr>
+<th>姓名</th><th>手機</th><th>分機</th><th>公務機</th>
+<th>OKR帳號</th><th>EzTeamwork帳號</th><th>Gmail帳號</th>
+<th>ERP銷售帳號</th><th>ERP庫存帳號</th><th>操作</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+<button onclick="addEmployee()">新增員工</button>
+<button onclick="exportTableToExcel('employeeTable','員工資料')">匯出 Excel</button>
+<button onclick="exportTableToPDF('employeeTable','員工資料')">匯出 PDF</button>
+</div>
+
+<!-- 證照管理 -->
+<div id="license" class="tab">
+<h2>證照管理</h2>
+<input type="text" id="licenseSearch" placeholder="搜尋員工或證照..." oninput="searchTable('licenseTable','licenseSearch')">
+<table id="licenseTable">
+<thead>
+<tr>
+<th>員工姓名</th><th>證照名稱</th><th>證照編號</th><th>發照日期</th>
+<th>有效日期</th><th>回訓週期</th><th>回訓時間</th><th>是否有效</th><th>操作</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+<button onclick="addLicense()">新增證照</button>
+<button onclick="exportTableToExcel('licenseTable','證照管理')">匯出 Excel</button>
+<button onclick="exportTableToPDF('licenseTable','證照管理')">匯出 PDF</button>
+</div>
+
+<!-- 零用金 -->
+<div id="expense" class="tab">
+<h2>零用金申請</h2>
+<input type="text" id="expenseSearch" placeholder="搜尋員工或內容..." oninput="searchTable('expenseTable','expenseSearch')">
+<table id="expenseTable">
+<thead>
+<tr>
+<th>員工姓名</th><th>部門</th><th>申請日期</th><th>內容</th>
+<th>金額</th><th>支出/收入</th><th>操作</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+<button onclick="addExpense()">新增申請</button>
+<button onclick="exportTableToExcel('expenseTable','零用金申請')">匯出 Excel</button>
+<button onclick="exportTableToPDF('expenseTable','零用金申請')">匯出 PDF</button>
+</div>
+
+<!-- 郵寄資料管理 -->
+<div id="mail" class="tab">
+<h2>郵寄資料管理</h2>
+<input type="text" id="mailSearch" placeholder="搜尋客戶或寄件紀錄..." oninput="searchTable('mailTable','mailSearch')">
+<table id="mailTable">
+<thead>
+<tr>
+<th>客戶名稱</th><th>聯絡人</th><th>寄件日期</th><th>寄件地址</th>
+<th>貨運廠商</th><th>內容</th><th>操作</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+<button onclick="addMail()">新增寄件紀錄</button>
+<button onclick="exportTableToExcel('mailTable','郵寄資料')">匯出 Excel</button>
+<button onclick="exportTableToPDF('mailTable','郵寄資料')">匯出 PDF</button>
+</div>
+
+<script>
+// ===== Tab 切換功能 =====
+function showTab(id){
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('tab-active'));
+  const tab = document.getElementById(id);
+  if(tab) tab.classList.add('tab-active');
+}
+
+// ===== 搜尋功能 =====
+function searchTable(tableId,inputId){
+  const input=document.getElementById(inputId).value.toLowerCase();
+  const rows=document.getElementById(tableId).getElementsByTagName('tbody')[0].rows;
+  for(let row of rows){
+    row.style.display = Array.from(row.cells).some(cell=>cell.textContent.toLowerCase().includes(input)) ? '' : 'none';
+  }
+}
+
+// ===== 匯出 Excel =====
+function exportTableToExcel(tableId,filename){
+  const wb = XLSX.utils.table_to_book(document.getElementById(tableId));
+  XLSX.writeFile(wb, filename+'.xlsx');
+}
+
+// ===== 匯出 PDF =====
+function exportTableToPDF(tableId,filename){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.autoTable({html:document.getElementById(tableId)});
+  doc.save(filename+'.pdf');
+}
+
+// ===== Google Sheets 設定 =====
+const SHEET_ID = '1MswacHjwstiihm98MRP6hpO-DMr_X7SIxMvsjkf5J-g';
+const API_KEY = 'AQ.Ab8RN6I0y0gItLwhAolSgrp8moEy_0lyKGzvDz5QsiUWs_clMg';
+const RANGE_EMP = 'Employees!A1:I';
+const RANGE_LIC = 'Licenses!A1:H';
+const RANGE_EXP = 'Expenses!A1:F';
+const RANGE_CLIENT = 'Clients!A1:C';
+const RANGE_COURIER = 'Couriers!A1:C';
+const RANGE_MAIL = 'MailRecords!A1:F';
+
+let employees=[], licenses=[], expenses=[], clients=[], couriers=[], mails=[];
+
+// ===== 初始化 Google API =====
+function initGAPI(){
+  gapi.load('client', async () => {
+    await gapi.client.init({apiKey: API_KEY, discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"]});
+    await loadAllSheets();
+  });
+}
+
+// ===== 讀取所有工作表 =====
+async function loadAllSheets(){
+  employees = await readSheet(RANGE_EMP);
+  licenses = await readSheet(RANGE_LIC);
+  expenses = await readSheet(RANGE_EXP);
+  clients = await readSheet(RANGE_CLIENT);
+  couriers = await readSheet(RANGE_COURIER);
+  mails = await readSheet(RANGE_MAIL);
+  renderAll();
+}
+
+// ===== 讀取 Sheet =====
+async function readSheet(range){
+  const resp = await gapi.client.sheets.spreadsheets.values.get({spreadsheetId:SHEET_ID, range});
+  return resp.result.values || [];
+}
+
+// ===== 更新 Sheet =====
+async function updateSheet(range, values){
+  await gapi.client.sheets.spreadsheets.values.update({
+    spreadsheetId:SHEET_ID,
+    range,
+    valueInputOption:'RAW',
+    resource:{values}
+  });
+  await loadAllSheets();
+}
+
+// ===== 渲染函數 =====
+function renderAll(){
+  renderEmployees();
+  renderLicenses();
+  renderExpenses();
+  renderMails();
+}
+
+// ===== 渲染員工資料（示範） =====
+function renderEmployees(){
+  const tbody = document.querySelector('#employeeTable tbody');
+  tbody.innerHTML = '';
+  employees.forEach((row, idx)=>{
+    const tr = document.createElement('tr');
+    row.forEach(val => {
+      const td = document.createElement('td');
+      td.textContent = val;
+      tr.appendChild(td);
+    });
+    // 操作欄位
+    const tdOp = document.createElement('td');
+    const delBtn = document.createElement('button');
+    delBtn.textContent = '刪除';
+    delBtn.onclick = ()=>{ employees.splice(idx,1); updateSheet(RANGE_EMP, employees); };
+    tdOp.appendChild(delBtn);
+    tr.appendChild(tdOp);
+    tbody.appendChild(tr);
+  });
+}
+
+// ===== 其他 CRUD 函數可依照 renderEmployees() 模板補充 =====
+function addEmployee(){
+  const name = prompt('輸入員工姓名');
+  if(name) { employees.push([name,'','','','','','','','']); updateSheet(RANGE_EMP, employees); }
+}
+
+// 初始顯示員工資料
+window.onload = ()=>{
+  showTab('employee');
+  initGAPI();
+};
+</script>
+</body>
+</html>
